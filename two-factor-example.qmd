@@ -1,0 +1,571 @@
+---
+title: "2 Factor Analysis Example"
+format: 
+  html:
+    code-overflow: wrap
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+## Load necessary packages
+
+Run the code below at the start of the session to make sure all the necessary packages are loaded.
+
+It is recommended that you put all your code to load packages in one R chunk at the start. Run the chunk below by clicking the little green arrow at the top right of the code chunk.
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+suppressPackageStartupMessages(
+  library(tidyverse)) ## for readr, dplyr, ggplot2
+library(ggbeeswarm) ## for jittering points (you can remove this is you did not use a dotplot)
+#library(flextable, warn.conflicts = FALSE) ## for making formatted tables that can be pasted elsewhere
+library(dabestr, warn.conflicts = FALSE) ##for data analysis using Bootstrap-coupled estimation
+library(rstatix, warn.conflicts = FALSE) #pipe friendly framework for basic stats
+library(ggpubr, warn.conflicts = FALSE) #publication ready plots & QQ plots
+library(labelled) #for labeling variables better
+
+
+```
+
+## Example Grip Force Data
+
+The data used here are from a student project where maximum grip force was measured for 10 subjects. Half of the subjects were given caffeine to drink, and the other half were given a placebo which was not caffeinated but was otherwise the same as the caffeinated drink. The maximum grip force was measured before each subject consumed their drink, and was measured again 30 minutes after the subject consumed their drink.
+
+Thus, the dependent variable is maximum grip force (measured in Newtons), and there are two independent variables - (1) the time the grip force was measured (Before or After) and (2) the type of drink consumed (Caffeine or Placebo).
+
+Since there is one measurement variable (maximum grip force), and two nominal variables (time of measurement, type of drink), we can use a 2-Factor analysis to see if caffeine has a different effect on grip force than the placebo.
+
+Because the same subject was measured twice (Before and After), we have to take that into account. There are several ways this can be done. One option is to use a random blocking factor (another name for a repeated measure), which is the example shown here.
+
+The students who did this project predicted that caffeine would stimulate the sympathetic nervous system which could increase grip strength. Thus, they predicted a significant interaction between caffeine and the time grip was measured where the maximum grip would increase more after drinking caffeine than drinking the placebo.
+
+We will start by importing the data file. This file (called grip.csv) has 4 columns and 20 rows of data.
+
+The variables are:
+
+-   `time.measured` - this is the time the grip force was measured, Before or After drinking
+
+-   `drink.type` - this is the type of drink consumed, Caffeine or Placebo
+
+-   `subject` - this is the subject ID number from 1-10
+
+-   `maxGrip` - this is the maximum grip force measured in Newtons
+
+```{r}
+#| label: import data
+
+#Import data file 
+my.df <- read_csv("data/grip.csv",
+                  show_col_types = FALSE)
+                 
+#Change independent categorical variables to factors
+my.df$time.measured <- factor(my.df$time.measured, 
+                             levels = c("Before", "After"))
+my.df$drink.type <- factor(my.df$drink.type, 
+                          levels = c("Placebo", "Caffeine"))
+
+#add more useful labels for the columns
+my.df <- my.df |> 
+  labelled::set_variable_labels(
+    subject           = "Subject ID",
+    time.measured     = "Time of Measurement",
+    drink.type        = "Drink Type",
+    maxGrip           = "Maximum Grip Force (N)"
+  )
+
+#see https://www.pipinghotdata.com/posts/2022-09-13-the-case-for-variable-labels-in-r/ for more help with labeling data
+
+```
+
+Take a look at the dataset we just created by clicking on "my.df" in the Environment tab in the upper right RStudio window.
+
+Note that this dataset, which we named "my.df" (for "my data frame", which is just a generic way to name a data frame making it easier to use template or example code), includes a tidy data spreadsheet. There are four columns and 20 observations in each. Each column has a column name and a more descriptive label that we added using the `set_variable_labels` function from the `labelled` package.
+
+Next we will relabel some of our variables so they can easily be used with the template code and avoid rewriting the column names a lot of times.
+
+
+```{r}
+#| label: define variables
+#Define your variables and redefine your dataframe name here to avoid having to type them a lot
+
+#define the continuous variable of choice 
+cont.var <- "maxGrip" 
+
+#define the categorical variable that is your within-subjects factor 
+w.factor.var <- "time.measured"
+w.predictor <- "time.measured"
+
+#define the categorical variable that is your between-subjects factor 
+b.factor.var <- "drink.type"
+b.predictor <- "drink.type"
+
+#define the name of the column that contains your subject identifiers
+subject.ID <- "subject"
+
+#define the within subjects formula using variable names above
+    response <- cont.var
+    formula_string.w <- paste0(response, " ~ ", w.predictor)
+    formula_object.w <- as.formula(formula_string.w)
+    
+#define the between subjects formula using variable names above
+    response <- cont.var
+    formula_string.b <- paste0(response, " ~ ", b.predictor)
+    formula_object.b <- as.formula(formula_string.b)
+
+```
+
+
+## Data Exploration
+
+### Descriptive Statistics
+
+First, let's get the full descriptive statistics by running the next code chunk.
+
+Note that we will use the 2 factors in the `group_by()` function to see the descriptive statistics for the interaction of these two factors.
+
+```{r}
+#| label: descriptive stats
+
+# the code below will calculate descriptive statistics for a variable of interest grouped by another variable
+
+
+# the code below will calculate descriptive statistics for a variable of interest grouped by another variable
+
+df.sum <- my.df  |>  
+  # remove missing values from continuous variables
+  filter(!is.na(.data[[cont.var]])) |> 
+  
+  # Group the data by your 2 factors
+  group_by(.data[[w.factor.var]], .data[[b.factor.var]]) |> 
+  
+  # calculate the descriptive stats
+  summarize(mean = mean(.data[[cont.var]]), 
+            median = median(.data[[cont.var]]), 
+            SD = sd(.data[[cont.var]]), 
+            IQR = IQR(.data[[cont.var]]), 
+            min = min(.data[[cont.var]]),
+            max = max(.data[[cont.var]]),
+            N = n())
+
+df.sum
+
+
+
+```
+
+How should we round these variables? Recall that you can use the SD as the indicator of how much average variability there is in your data. For this class, please round the SD to 2 significant digits based on recommendations in [Cole et al. (2015)](https://www-ncbi-nlm-nih-gov.libproxy.smith.edu/pmc/articles/PMC4483789/). Then round all the other values to the same decimal place as the rounded SD.
+
+```{r}
+#| label: rounding the SD
+
+
+#calculate rounded SD
+my.df |> 
+  
+  # replace the blank with the categorical variable(s)
+  group_by(.data[[w.factor.var]], .data[[b.factor.var]]) |> 
+  
+  # remove missing values 
+  filter(!is.na(.data[[cont.var]])) |> 
+  
+  #calculate the rounded values
+  summarise(SD = signif(sd(.data[[cont.var]]), digits=2))
+
+```
+
+
+In the case above, we should round the SD to the tenths or ones place to get it rounded to 2 significant digits (there is more variation in the After measurements). Thus, we will round the values to the tenths place for the Before groups and to the ones place for the After groups. But to simplify, we will round them all to the tenths place for this example.
+
+```{r}
+#| label: rounded descriptive stats
+
+# Use the following for digits in the `round` function
+# 
+#    rounding to the tens place use digits=-1
+#    rounding to the ones place use digits=0
+#    rounding to the tenths place use digits=1
+#    rounding to the hundredths place use digits=2
+
+#set the number of digits to round to based on the rules above (this blank should be just a number)
+round.digit <- 1
+
+
+# replace the blank with the cleaned data frame name 
+my.df  |>  
+  # remove missing values from continuous variables
+  filter(!is.na(.data[[cont.var]])) |> 
+  
+  #this groups by a defined set of between and within subjects factors
+  #remove factors as needed
+  group_by(.data[[w.factor.var]], .data[[b.factor.var]] )  |> 
+  
+  # calculate the descriptive stats
+  # do not place anything in the empty parentheses in the n() 
+  summarize(Sample.size = n(),
+            Min = round(min(.data[[cont.var]]), digits=round.digit),
+            Q1 = round(quantile(.data[[cont.var]], .25), digits=round.digit),
+            Median = round(median(.data[[cont.var]]), digits=round.digit),
+            Q3 = round(quantile(.data[[cont.var]], .75), digits=round.digit),
+            Max = round(max(.data[[cont.var]]), digits=round.digit),
+            Mean = round(mean(.data[[cont.var]]), digits=round.digit),              
+            SD = signif(sd(.data[[cont.var]]), digits=2))
+
+```
+
+
+
+### QQ Plots to Assess Normality
+
+Use a QQ plot to see if each continuous variable is normally distributed. Since we only have one continuous dependent variable in this example, that is the only variable we need to assess the distribution for.
+
+The `color` and `facet.by` functions splits the plots up by any factors you have. If you have no factors, then delete one or both of those lines and the comma from the above line.
+
+
+```{r}
+#| label: Dependent variable QQ plots 
+
+#make a QQ plot for each dependent variable that is continuous
+ggpubr::ggqqplot(
+  data = my.df,               #put the data frame name here 
+  x = {{ cont.var }},                  #put the continuous variable name here
+  color = {{ b.factor.var }},       #put the between subjects factor here (remove if no factors)
+  facet.by = {{ w.factor.var }}  #put the within subjects factors here (remove if no factors)
+  )  
+
+```
+
+If the points are fairly close to the line, you can assume that the data have a reasonably normal distribution.
+
+If the points do not fit close to the line at all, you can try a transformation (such as taking the logarithm) to see if that gets the points to fit closer to the line. Just note that you can't take the log of zero, so if you have any zero values, you can add one before taking the log (or use the function `log1p`)
+
+Here we can see that the points fit the line reasonably well, so we can assume it is close enough to a normal distribution. Do note that the variability (shown as the shaded area in the QQ plots but also in the SD and IDR of the descriptive statistics) is much higher in the "After" values than in the "Before" values.
+
+Let's look for outliers next.
+
+```{r}
+#| label: identify outliers 
+
+#test for outliers
+my.df  |> 
+  group_by(.data[[w.factor.var]], .data[[b.factor.var]] )  |> 
+  rstatix::identify_outliers({{ cont.var }}) 
+
+```
+
+If an outlier is extreme, you may decide to run the analysis with and without the outlier(s) to see the impact on the results. Since this outlier is not extreme, we will leave it in but it is good to note.
+
+```{r}
+#| label: remove outliers 
+
+#if you want to remove an outlier
+#fill in the blank with the number of the subject you want to remove
+#remove the hashtags in front of the code below
+
+# my.df2 <- my.df |> 
+#   dplyr::filter(subject != ___)
+
+
+```
+
+If you want to report any of the descriptive statistics, it really is not necessary to report all of them. Since this dataset is reasonably normal, we can use the mean and SD to summarize the data.
+
+```{r}
+#| label: formatted table
+
+#see https://davidgohel.github.io/flextable/ for more info & formatting options
+
+#calculate descriptive stats
+#replace the blank below with the name of the dataframe
+df.sum <- my.df |> 
+  
+  # replace the blank with the categorical variable(s)
+  group_by(.data[[w.factor.var]], .data[[b.factor.var]] )  |>  
+  
+  # remove missing values 
+  filter(!is.na(.data[[cont.var]])) |> 
+  
+  # calculate the descriptive stats
+  # replace the blanks with the number of digits 
+  # to the right of the decimal place based on the rounded SD
+  # the SD is rounded to 2 significant digits using signif  
+  # do not place anything in the empty parentheses in the n() 
+  # N represents the sample size within each group
+  summarise(Mean = round(mean(.data[[cont.var]]), digits=1), 
+            SD = signif(sd(.data[[cont.var]]), digits=2),
+            N = n())
+
+library(flextable) #helps format a nicer table
+
+#create the formatted table
+ft <- flextable(df.sum,
+                cwidth = 0.75) |>  #can vary cell width as needed
+  
+  #bold the headings
+  bold(part = "header") |> 
+  
+  #center columns
+  align(align = "center", part = "all" )
+
+#print the table
+#right click on the table, choose select all, 
+#choose copy, then paste in your document
+#finish formatting as needed in your document
+ft
+
+```
+
+
+
+
+## Estimation Statistics
+
+Next, we want to perform some inferential statistical tests to see if the dependent variable was impacted by the two independent variables. Since this experimental design used the same subjects, we need to take that into consideration using a repeated measures type of test.
+
+### Compare the baseline between treatment groups
+
+First, we will use the `dabestr` package to use estimation statistics to compare the baseline (Before) values between the two treatments (Caffeine vs Placebo) to make sure that we did a good job of random sampling. Our expectation is that there should not be a difference between the treatments for the baseline values before they experienced the treatments.
+
+We will start by performing a [basic mean difference test for unpaired means](https://cran.r-project.org/web/packages/dabestr/vignettes/tutorial_basics.html)
+
+
+```{r}
+#| label: est stats compare baselines
+
+#filter to keep just the "Before" values
+my.df.before <- my.df |> 
+  filter(time.measured == "Before")
+
+#set up the comparison
+compare_baselines <- load(
+  my.df.before,
+  x = drink.type, 
+  y = maxGrip,
+  idx = c("Placebo", "Caffeine")
+) |> 
+mean_diff()
+
+#print the results
+print(compare_baselines)
+
+#plots the results
+#for more plot options
+#see https://acclab.github.io/dabestr/articles/plot_aesthetics.html 
+est.baseline.plot <- 
+  dabest_plot(compare_baselines,
+            swarm_label = "Baseline Max Grip Force (N)",
+            raw_marker_size = 3, 
+            raw_marker_alpha = 0.8,
+            swarm_bars = FALSE,
+            contrast_bars = FALSE)
+est.baseline.plot
+
+
+
+```
+
+
+The graph on the left shows the raw dependent variable (in this case, the baseline maximum grip force) as points with the mean for each group shown as the gap and the standard deviation shown as the vertical lines. The graph on the right shows effect size as a mean difference. The shaded curve shows the 5000 bootstrapped samples - basically, it is taking a random sub-sample of your data and calculating the mean difference for each, then it repeats this 5000 times (see the [Estimation Stats background material](https://www.estimationstats.com/#/background) for their explanation) and shows all these mean differences as a distribution. The black point is the mean difference between each treatment (Placebo vs Caffeine) for the baseline values among all those 5000 resamples, and the dark vertical line error bars indicate the 95% confidence interval.
+
+If you click on the other little window of results below the code chunk (the one on the left above), you will see the results of the actual statistical test.
+
+As you can see from the estimation plot, the distribution of mean differences for Caffeine minus Placebo for the baseline (Before) values definitely overlaps the zero line. The mean difference is 0.38 and the lower 95% confidence interval goes well below the zero line. The p-value for the two-sided permutation t-test conducted was 1. This  indicates that there was no difference between the two treatment groups for the baseline (=Before) values. This means they did a good job of randomly assigning subjects to treatment groups.
+
+### Compare the change in value between treatments
+
+Next, we want to see if the value after the subjects drink their assigned drink is greater than their baseline value for the Caffeine treatment. Since the same subjects were measured before and after drinking, one way we can take the sbujects into account is to find the change in maximum grip force for each subject (After - Before), and then compare that change between treatments.
+
+```{r}
+#| label: est stats compare change in value
+
+#first we need to change the format of the data from long to wide
+#this way, we will have one row for each subject and can take a difference
+#between the after and before values
+my.df.wide  <- my.df |> 
+  pivot_wider(
+    names_from = time.measured,
+    names_glue = "{time.measured}.{.value}",
+    values_from = maxGrip
+  )
+
+#next, take the difference between the values for each subject
+my.df.diff <- my.df.wide |> 
+  mutate(change.maxGrip = After.maxGrip - Before.maxGrip)
+
+#set up the comparison
+compare_change <- load(
+  my.df.diff,
+  x = drink.type, 
+  y = change.maxGrip,
+  idx = c("Placebo", "Caffeine")
+) |> 
+mean_diff()
+
+#print the results
+print(compare_change)
+
+#plots the results
+#for more plot options
+#see https://acclab.github.io/dabestr/articles/plot_aesthetics.html 
+est.change.plot <- 
+  dabest_plot(compare_change,
+            swarm_label = 
+              "Change in Max Grip Force (N)\n(After - Before)",
+            raw_marker_size = 3, 
+            raw_marker_alpha = 0.8,
+            es_marker_size = 1,
+            es_line_size = 2,
+            swarm_bars = FALSE,
+            contrast_bars = FALSE)
+est.change.plot
+
+
+```
+
+The points in the plot represent the change in maximum grip force after drinking minus before. There was more variability in the change in maximum grip force for the caffeine group - 3 values were fairly high (increased by 50N or more), but two values were fairly low (only increased by less than 15N). The change in maximum grip force for the placebo group (who drank decaf coffee) was less variable with values between ~9-30N. Because the 95% confidence interval for the mean difference between the treatments overlaps with zero, this suggests that the regular caffeinated coffee (Caffeine group) did not significantly increase the maximum grip force relative to the decaf coffee (Placebo group) (the legacy p-value of the two-sided permutation t-test of 0.42 also suggests there was no significant difference).
+
+
+### Delta-delta comparison
+
+Alternatively to manually computing the change in maximum grip force after drinking caffeinated vs decaf coffee as we did above, we can perform a [delta-delta comparison](https://acclab.github.io/dabestr/articles/tutorial_deltadelta.html) using estimation statistical techniques (see the Paired Data example on the delta-delta tutorial page).
+
+
+```{r}
+#| label: est stats delta-delta
+
+
+#set up the delta-delta test
+paired_delta2  <- load(my.df,
+  x = time.measured, 
+  y = maxGrip, 
+  experiment = drink.type,
+  delta2 = TRUE,
+  experiment_label = c("Placebo", "Caffeine"),
+  x1_level = c("Before", "After"),
+  paired = "baseline", 
+  id_col = subject)  |> 
+  mean_diff()
+
+#prints the results of the inferential estimation statistics
+print(paired_delta2)
+print(paired_delta2$boot_result)
+
+#plots the results
+#for more plot options
+#see https://acclab.github.io/dabestr/articles/plot_aesthetics.html 
+est.delta2.plot <- 
+  dabest_plot(
+    paired_delta2,
+    swarm_label = "Max Grip Force (N)",
+    raw_marker_size = 0.5, 
+    raw_marker_alpha = 0.8,
+    swarm_x_text = 8,
+    swarm_y_text = 12,
+    swarm_bars = FALSE,
+    contrast_bars = FALSE,
+    show_legend = FALSE)
+est.delta2.plot
+
+
+
+```
+
+The top graph shows the raw values for maximum grip force with a line connecting the values within subjects. This graph is nice in that it really shows how all subjects had an increase in maximum grip force when measured after drinking compared to before. You can also see in the estimation plots that the after values were overall higher than the before values for both treatment groups (the 95%CI for the paired mean difference fop After Placebo minus Before Placebo and welll as the After Caffeine minus Before Caffeine does not overlap with zero for either treatment). This demonstrates why it is important to have a Placebo group. Taking a second measurement did have an effect in increasing the maximum grip force regardless of treatment. It is not clear if this was because the subjects were better hydrated after drinking something regardless of caffeine content, they learned how to grip the hand dynamometer better on the second try, they were more relaxed for the second measurement, or something else.
+
+While the After value for maximum grip force increased the most for 3 subjects within the Caffeine group, the fact that the other 2 subjects in that group had a very small increase meant that the overall increase was not significantly higher for the Caffeine group compared to the Placebo group (as evidenced by the delta-delta plot where the lower 95%CI does overlap with zero). 
+
+Note that the mean difference for the delta-delta plot was 22.26, and this is the same mean difference that we got in the analysis above where we manually calculated the change in maximum grip force (After - Before) and then compared between treatments.  
+
+
+
+```{r}
+#| label: unpaired t-test of baselines
+
+#computes the unpaired t-test
+baseline.ttest <- my.df  |>  
+  filter(time.measured == "Before") |> 
+  t_test(maxGrip ~ drink.type,
+         detailed = TRUE)  |> 
+  add_significance()
+baseline.ttest 
+
+
+#computes the effect size using Cohen's d
+my.df  |>  
+  filter(time.measured == "Before") |> 
+  cohens_d(maxGrip ~ drink.type, var.equal = TRUE)
+  
+```
+The p-value (0.91) is very high and the negligible effect size (Cohen's d = -0.07) indicate that the maximum grip force "Before" consuming either drink was not significantly different between the Placebo and Caffeine groups.
+
+Lastly, we can graph the data as a dot plot with lines connecting the subjects
+
+```{r}
+#| label: two-factor plot
+
+#create 2 factor plot 
+factor2.plot <- ggplot(
+  data = my.df, 
+  aes(
+    y = maxGrip, 
+    x = time.measured,
+    group = `subject`)) +
+  geom_point(size = 3, shape = 21, fill = "steelblue", alpha = 0.5) +
+  geom_line() + 
+  
+  ###this bit of code adds the horizontal bar - keep as median or change to mean
+  stat_summary(fun = median, fun.min = median, fun.max = median, 
+      geom = "crossbar", width = 0.3, linewidth = 0.6,
+      aes(group = 'time.measured' )) +
+  
+  xlab("Time of Measurement") +
+  ylab("Maximum Grip Force (N)") +
+  coord_cartesian(ylim = c(0, 120)) +
+  theme_classic(base_size=18) +
+  facet_grid(~drink.type)
+factor2.plot
+
+```
+
+
+The graph shows the data points connected by lines for each subject as well as the median value for each treatment given as the thick horiztonal bar. 
+
+Now we have the results using both frameworks of inferential statistics (estimation statistics and NHST). Here, they basically give the same results. Thus, you could pick which framework makes more sense to you - which one could you explain clearly to an audience?
+
+
+## Save your graphs
+
+To save your graph with the `ggsave()` function, you need to name the resulting file with surrounding " ", and indicate the size via height, width, and units. Don't forget to save the graph with a dpi call at 300-500 to make it nice and crisp! Look at the `ggsave()` help file for more information and options.
+
+Note that the code below will save the graph and put it into the "results" folder 
+
+```{r}
+#| label: Save your graphs
+#| eval: false
+
+# save the graphs
+# it is usually best to use .png or .jpg file types
+
+ggsave(est.baseline.plot, filename="results/est.baseline.plot.png",  
+       height = 5, width = 8, units = "in", 
+       dpi = 300)
+
+ggsave(est.change.plot, filename="results/est.change.plot.png",  
+       height = 5, width = 8, units = "in", 
+       dpi = 300)
+
+ggsave(est.delta2.plot, filename="results/est.delta2.plot.png",  
+       height = 5, width = 8, units = "in", 
+       dpi = 300)
+
+
+ggsave(factor2.plot, filename="results/factor2.plot.png",  
+       height = 5, width = 8, units = "in", 
+       dpi = 300)
+
+```
+
+
