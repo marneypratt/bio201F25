@@ -1,0 +1,33 @@
+variable,variable_label,variable_type,variable_info,dataset
+subject,Subject,numerical,discrete (positive range),"HRVdata, subjects"
+age,Age (years),numerical,discrete (positive range),subjects
+gender,Gender Identity,categorical,"Female, Nonbinary (2 levels)",subjects
+treatment,Treatment,categorical,"A (unstressed by time pressure), B (stressed by time pressure) (2 levels)",HRVdata
+test.period,Testing Period,categorical,"Baseline, Puzzle (2 levels)",HRVdata
+min.HR,Minimum Heart Rate (bpm),numerical,continuous,HRVdata
+max.HR,Maximum Heart Rate (bpm),numerical,continuous,HRVdata
+avg.HR,Average Heart Rate (bpm),numerical,continuous,HRVdata
+RMSSD,Root Mean Square of Successive Differences (ms),numerical,continuous,HRVdata
+SDNN,Standard Deviation of the R-R intervals (ms),numerical,continuous,HRVdata
+ln.RMSSD,Natural Logarithm of Root Mean Square of Successive Differences,numerical,continuous,HRVdata
+pNN50,Proportion of adjacent R-R Intervals differing by more than 50 ms (%),numerical,continuous,HRVdata
+mean.RR,Mean of the R-R intervals (ms),numerical,continuous,HRVdata
+total.power,Total Power (ms^2),numerical,"continuous, total area under the curve of all frequencies",HRVdata
+LF.HF.ratio,Ratio of Low- to High-Frequency,numerical,"continuous, Low values can indicate PSNS dominance, high values can indicate SNS dominance",HRVdata
+LF.power,Low-Frequency Power (ms^2),numerical,"continuous, area under the curve where frequency activity in the 0.04-0.15 Hz range",HRVdata
+HF.power,High-Frequency Power (ms^2),numerical,"continuous, area under the curve where frequency activity in the 0.15-0.40 Hz range",HRVdata
+LF.peak,Low-Frequency Peak (Hz),numerical,continuous,HRVdata
+HF.peak,High-Frequency Peak (Hz),numerical,continuous,HRVdata
+mean.HRV,Mean Heart Rate Variability,numerical,"continuous, ln.RMSSD/6.5*100, no units",HRVdata
+startDateTime,Date and time of the start of the experiment (yyyy-mm-dd hh:mm:ss),datetime,date and time in year-month-day hours:minutes:seconds,HRVdata
+Notes,Notes,character,,HRVdata
+sleep,Do you get enough sleep?,character,,subjects
+satiated,Have you had enough to eat today?,character,,subjects
+feeling.before,"How are you feeling right now, with 1 being very negative and 5 being very positive?",numerical,discrete (positive range),subjects
+energy.before,What is your energy level right now (with 1 being lowest and 5 being highest),numerical,discrete (positive range),subjects
+caffeine.regular,Do you regularly drink something caffeinated?,character,,subjects
+caffeine.last,"When was the last time you had caffeine (for example, what type of beverage and how many oz did you drink)?",character,,subjects
+like.puzzles,Do you like puzzles?,character,,subjects
+puzzle.frequency,How often do you complete puzzles?,character,,subjects
+feeling.after,"How are you feeling after doing the puzzle, with 1 being very negative and 5 being very positive?",,discrete (positive range),subjects
+energy.after,What is your energy level after doing the puzzle (with 1 being lowest and 5 being highest),,discrete (positive range),subjects

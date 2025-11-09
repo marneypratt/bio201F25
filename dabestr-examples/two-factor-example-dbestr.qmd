@@ -178,7 +178,7 @@ my.df |>
 ```
 
 
-In the case above, we should round the SD to the tenths or ones place to get it rounded to 2 significant digits (there is more variation in the After measurements). Thus, we will round the values to the tenths place for the Before groups and to the ones place for the After groups. But to simplify, we will round them all to the tenths place for this example.
+In the case above, we should round the SD to the tenths or ones place to get it rounded to 2 significant digits (there is more variation in the After measurements). Thus, we should round the values to the tenths place for the Before groups and to the ones place for the After groups. But to simplify, we will round them all to the tenths place for this example. We can always round the After values to the ones place later.
 
 ```{r}
 #| label: rounded descriptive stats
