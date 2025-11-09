@@ -338,7 +338,7 @@ line.plot <- ggplot(
 line.plot
 
 # save the graph! (.png or .jpg file types are recommended)
-ggsave(filename = "results/HRVgraph.png",  
+ggsave(filename = "results/examples/crossover/HRVgraph.png",  
        plot = line.plot,   #put the object name of your plot here
        height = 5, width = 7, units = "in", 
        dpi = 300)
@@ -423,7 +423,7 @@ crossover.effect.plot
 
 
 # save the graph (.png or .jpg file types are recommended)
-ggsave(filename = "results/crossover.effect.plot.png",    #give your graph a name you will remember
+ggsave(filename = "results/examples/crossover/crossover.effect.plot.png",    #give your graph a name you will remember
        plot = crossover.effect.plot,   #put the object name of your effect size graph here
        height = 5, width = 3, units = "in", 
        dpi = 300)
@@ -534,25 +534,25 @@ binary.survey
 
 
 # save the graph (.png or .jpg file types are recommended)
-ggsave(filename="results/cross.energy.survey.png", 
+ggsave(filename="results/examples/crossover/cross.energy.survey.png", 
        plot = energy.survey,   #put the object name of your survey bar graph here
        height = 1.5, width = 6, units = "in", 
        dpi = 300)
 
 # save the graph (.png or .jpg file types are recommended)
-ggsave(filename="results/cross.feeling.survey.png", 
+ggsave(filename="results/examples/crossover/cross.feeling.survey.png", 
        plot = feeling.survey,   #put the object name of your survey bar graph here
        height = 1.5, width = 6, units = "in", 
        dpi = 300)
 
 # save the graph (.png or .jpg file types are recommended)
-ggsave(filename="results/cross.caff.survey.png", 
+ggsave(filename="results/examples/crossover/cross.caff.survey.png", 
        plot = caff.survey,   #put the object name of your survey bar graph here
        height = 1.5, width = 6, units = "in", 
        dpi = 300)
 
 # save the graph (.png or .jpg file types are recommended)
-ggsave(filename="results/cross.binary.survey.png", 
+ggsave(filename="results/examples/crossover/cross.binary.survey.png", 
        plot = binary.survey,   #put the object name of your survey bar graph here
        height = 2.5, width = 6, units = "in", 
        dpi = 300)
