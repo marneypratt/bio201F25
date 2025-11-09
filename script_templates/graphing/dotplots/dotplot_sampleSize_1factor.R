@@ -34,7 +34,7 @@ ___  |>    #put the same data frame name here as above
   stat_summary(
     fun = median,       #graphs the median
     geom = "crossbar",  #crossbar shape
-    width = 0.5,        #width of the bar
+    width = 0.3,        #width of the bar
     linewidth = 0.75,   #thickness of bar
     color = "black") +  #color 
   

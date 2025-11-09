@@ -20,7 +20,7 @@ ggplot(
   stat_summary(
     fun = median,       #graphs the median
     geom = "crossbar",  #crossbar shape
-    width = 0.5,        #width of the bar
+    width = 0.2,        #width of the bar
     linewidth = 0.75,   #thickness of bar
     color = "black") +  #color 
   
