@@ -72,13 +72,13 @@ metadata <- read_csv("data/____.csv")
 
 #create variable labels using the labelled package
 variable_labels <- metadata |> 
-  select(variable, variable_label) |> 
+  dplyr::select(variable, variable_label) |> 
   deframe()
 
 #add labels to data
 my.df <- my.df |> 
   left_join(subjects) |> 
-  set_variable_labels(!!!variable_labels)
+  labelled::set_variable_labels(!!!variable_labels)
 
 
 
