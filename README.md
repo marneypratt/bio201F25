@@ -36,10 +36,10 @@ If you are working on your desktop, make sure you have the following packages in
 * `tidyverse`
 * `ggbeeswarm`
 * `usethis`
-* `dabestr`
 * `flextable`
 * `rstatix`
 * `ggpubr`
 * `labelled`
+* `ggstats`
 
 
