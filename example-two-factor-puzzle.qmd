@@ -401,7 +401,7 @@ baseline.effect.plot <- baseline.effectSize.results  |>
                   linewidth = 0.8, # Adjust line thickness
                   color = "steelblue") + # Set color
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") + # Add a reference line at 0
-  xlab("Baseline - Puzzle") +
+  xlab("Unstressed - Time Stressed") +
   ylab("Standardized Effect Size") +
   #additional formatting
   theme_classic(base_size = 14)  +  #sets the font size
@@ -508,7 +508,7 @@ effect.plot <- btw.effectSize.results  |>
                   linewidth = 0.8, # Adjust line thickness
                   color = "steelblue") + # Set color
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") + # Add a reference line at 0
-  xlab("Baseline - Puzzle") +
+  xlab("Unstressed - Time Stressed") +
   ylab("Standardized Effect Size") +
   #additional formatting
   theme_classic(base_size = 14)  +  #sets the font size
@@ -700,7 +700,7 @@ trt.effect.plot <- trt.effectSize.results  |>
                   linewidth = 0.8, # Adjust line thickness
                   color = "steelblue") + # Set color
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") + # Add a reference line at 0
-  xlab("B - A") +
+  xlab("Time Stressed - Unstressed") +
   ylab("Standardized Effect Size") +
   #additional formatting
   theme_classic(base_size = 14)  +  #sets the font size
